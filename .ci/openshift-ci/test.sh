@@ -20,9 +20,9 @@ set -o pipefail
 # error on unset variables
 set -u
 
-export OPERATOR_REPO=$(dirname $(dirname $(readlink -f "$0")));
-source "${OPERATOR_REPO}"/.github/bin/common.sh
-source "${OPERATOR_REPO}"/.github/bin/oauth-provision.sh
+# export OPERATOR_REPO=$(dirname $(dirname $(readlink -f "$0")));
+# source "${OPERATOR_REPO}"/.github/bin/common.sh
+# source "${OPERATOR_REPO}"/.github/bin/oauth-provision.sh
 
 # Stop execution on any error
 trap "catchFinish" EXIT SIGINT
@@ -32,29 +32,37 @@ deployChe() {
 }
 
 runTest() {
-  deployChe
-  waitDevWorkspaceControllerStarted
+#   deployChe
+#   waitDevWorkspaceControllerStarted
 
-  # wait for 2 min for devworkspace-controller ready to work.
-  sleep 120
-  createWorkspaceDevWorkspaceController
-  waitWorkspaceStartedDevWorkspaceController 
-  sleep 120
-  oc get pods -n ${NAMESPACE}
-  oc get routes -n ${NAMESPACE}
+#   # wait for 2 min for devworkspace-controller ready to work.
+#   sleep 120
+#   createWorkspaceDevWorkspaceController
+#   waitWorkspaceStartedDevWorkspaceController 
+#   sleep 120
+#   oc get pods -n ${NAMESPACE}
+#   oc get routes -n ${NAMESPACE}
 
-  wsname=$(oc get pods  | grep workspace | awk '{print $1}')
-  oc logs $wsname -c theia-ide
-  oc logs $wsname -c terminal
-  oc get events -n ${NAMESPACE}
+#   wsname=$(oc get pods  | grep workspace | awk '{print $1}')
+#   oc logs $wsname -c theia-ide
+#   oc logs $wsname -c terminal
+#   oc get events -n ${NAMESPACE}
+
+
+
 
   # patch pod.yaml 
-  wget https://gist.githubusercontent.com/SkorikSergey/3ce0000301d122b6a41782a98229ccc3/raw/0ef3858a21fbae844b1e0f691dee25a3b1fbe8ce/happy-path-pod.yaml
-  ECLIPSE_CHE_URL=http://$(oc get route -n "${NAMESPACE}" che -o jsonpath='{.status.ingress[0].host}')
-  TS_SELENIUM_DEVWORKSPACE_URL="https://$(oc get route -n "${NAMESPACE}" | grep theia/ | awk '{print $2}')/theia/"
-  sed -i "s@CHE_URL@${ECLIPSE_CHE_URL}@g" happy-path-pod.yaml
-  sed -i "s@WORKSPACE_ROUTE@${TS_SELENIUM_DEVWORKSPACE_URL}@g" happy-path-pod.yaml
-  cat happy-path-pod.yaml
+  wget https://raw.githubusercontent.com/Ohrimenko1988/che/openshiftCi/.ci/openshift-ci/happy-path-pod.yaml
+ 
+ 
+#   ECLIPSE_CHE_URL=http://$(oc get route -n "${NAMESPACE}" che -o jsonpath='{.status.ingress[0].host}')
+#   TS_SELENIUM_DEVWORKSPACE_URL="https://$(oc get route -n "${NAMESPACE}" | grep theia/ | awk '{print $2}')/theia/"
+#   sed -i "s@CHE_URL@${ECLIPSE_CHE_URL}@g" happy-path-pod.yaml
+#   sed -i "s@WORKSPACE_ROUTE@${TS_SELENIUM_DEVWORKSPACE_URL}@g" happy-path-pod.yaml
+#   cat happy-path-pod.yaml
+
+
+
 
   oc apply -f happy-path-pod.yaml
   # wait for the pod to start
@@ -79,6 +87,6 @@ runTest() {
   oc exec -n ${NAMESPACE} happy-path-che -c download-reports -- touch /tmp/done
 }
 
-initDefaults
-installYq
+# initDefaults
+# installYq
 runTest
